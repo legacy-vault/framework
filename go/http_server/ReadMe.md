@@ -38,4 +38,4 @@ go get "github.com/legacy-vault/framework/go/http_server"
 ## Usage.
 
 The Framework is ready for Usage!
-Add you HTTP Handlers and enjoy the Server.
+Add your HTTP Handlers and enjoy the Server.
