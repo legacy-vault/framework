@@ -13,7 +13,7 @@ The Framework has the following Features:
   -	Main Parameters are easily configurable using the Constants;
   -	Different Exit Codes for different Failures;
   -	HTTP Router with built-in Functionality, which includes:
-    - Ping Handler (responds as "PONG" on '/ping' Request;
+    - Ping Handler (responds as "PONG" on '/ping' Request);
     - Application Name Handler;
     - Application Version Handler;
     - Internal Application Statistics Handler;
