@@ -46,7 +46,7 @@ const StartUpErrorMonitorMsgPostfixGood = "[DONE]"
 const MsgStop = "HTTP Server Shutdown."
 
 const BackgroundErrorMonitorMsgFormat = "HTTP Server Error: %v.\r\n"
-const BackgroundErrorMonitorStartReportDelayMs = 500
+const ReportDelayMs = 1000
 
 const MsgBgErrorMonitorStart = "HTTP Server Background Error Monitor " +
 	"has started."
@@ -158,6 +158,7 @@ func (srv *Server) Start() error {
 
 	var err error
 	var loop bool
+	var msg string
 	var sleepTick time.Duration
 	var timeOfStart time.Time
 	var timeOfStartUpMonitorEnd time.Time
@@ -207,8 +208,9 @@ func (srv *Server) Start() error {
 	// Report Postfix.
 	fmt.Println(StartUpErrorMonitorMsgPostfixGood)
 
-	// Address Report.
-	log.Printf(MsgFormatStartAddress, srv.HTTPServer.Addr)
+	// Log a delayed Address Report.
+	msg = fmt.Sprintf(MsgFormatStartAddress, srv.HTTPServer.Addr)
+	go logDelayedReport(msg)
 
 	return nil
 }
@@ -230,8 +232,8 @@ func (srv *Server) bgErrorMonitor() {
 	var err error
 	var channelExists bool
 
-	// Start Report.
-	go printDelayedStartReport()
+	// Log a delayed Start Report.
+	go logDelayedReport(MsgBgErrorMonitorStart)
 
 	channelExists = true
 	for channelExists {
@@ -255,15 +257,14 @@ func (srv *Server) bgErrorMonitor() {
 	log.Println(MsgBgErrorMonitorStop)
 }
 
-// Prints a delayed Start Report.
-func printDelayedStartReport() {
+// Logs a delayed Report.
+func logDelayedReport(msg string) {
 
 	var delay time.Duration
 
-	delay = time.Millisecond *
-		time.Duration(BackgroundErrorMonitorStartReportDelayMs)
+	delay = time.Millisecond * time.Duration(ReportDelayMs)
 	time.Sleep(delay)
-	log.Println(MsgBgErrorMonitorStart)
+	log.Println(msg)
 }
 
 // Stops the Server.
