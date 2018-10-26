@@ -15,7 +15,7 @@
 //
 // Web Site:		'https://github.com/legacy-vault'.
 // Author:			McArcher.
-// Creation Date:	2018-10-24.
+// Creation Date:	2018-10-27.
 // Web Site Address is an Address in the global Computer Internet Network.
 //
 //============================================================================//
@@ -27,6 +27,7 @@
 package main
 
 import (
+	"github.com/legacy-vault/framework/go/http_server/config"
 	"github.com/legacy-vault/framework/go/http_server/server"
 	"github.com/legacy-vault/framework/go/http_server/stat"
 	"log"
@@ -47,7 +48,9 @@ func Fin(app *Application, exitCode int) error {
 	var stopTime time.Time
 	var stopTimeStr string
 
-	log.Println(MsgShutdown)
+	if (config.App.Main.Verbose) {
+		log.Println(MsgShutdown)
+	}
 
 	// Stop the HTTP Server.
 	err = stopHTTPServer(app.HTTPServer)
@@ -64,9 +67,11 @@ func Fin(app *Application, exitCode int) error {
 	}
 
 	// Report.
-	stopTime = stat.StopTime
-	stopTimeStr = stopTime.Format(stat.TimeFormat)
-	log.Printf(MsgFormatStopReport, stopTimeStr)
+	if (config.App.Main.Verbose) {
+		stopTime = stat.StopTime
+		stopTimeStr = stopTime.Format(stat.TimeFormat)
+		log.Printf(MsgFormatStopReport, stopTimeStr)
+	}
 
 	// Exit to Operating System.
 	os.Exit(exitCode)

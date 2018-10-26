@@ -15,7 +15,7 @@
 //
 // Web Site:		'https://github.com/legacy-vault'.
 // Author:			McArcher.
-// Creation Date:	2018-10-24.
+// Creation Date:	2018-10-27.
 // Web Site Address is an Address in the global Computer Internet Network.
 //
 //============================================================================//
@@ -28,6 +28,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/legacy-vault/framework/go/http_server/config"
 	"github.com/legacy-vault/framework/go/http_server/exit"
 	"golang.org/x/net/context"
 	"log"
@@ -53,7 +54,7 @@ const MsgBgErrorMonitorStart = "HTTP Server Background Error Monitor " +
 const MsgBgErrorMonitorStop = "HTTP Server Background Error Monitor " +
 	"has stopped."
 
-const MsgFormatStartAddress = "HTTP Server has been started at '%s'.\r\n"
+const MsgFormatStartAddress = "HTTP Server has been started at '%s'."
 
 type Server struct {
 	HTTPServer                   http.Server
@@ -209,8 +210,10 @@ func (srv *Server) Start() error {
 	fmt.Println(StartUpErrorMonitorMsgPostfixGood)
 
 	// Log a delayed Address Report.
-	msg = fmt.Sprintf(MsgFormatStartAddress, srv.HTTPServer.Addr)
-	go logDelayedReport(msg)
+	if (config.App.Main.Verbose) {
+		msg = fmt.Sprintf(MsgFormatStartAddress, srv.HTTPServer.Addr)
+		go logDelayedReport(msg)
+	}
 
 	return nil
 }
@@ -233,7 +236,9 @@ func (srv *Server) bgErrorMonitor() {
 	var channelExists bool
 
 	// Log a delayed Start Report.
-	go logDelayedReport(MsgBgErrorMonitorStart)
+	if (config.App.Main.Verbose) {
+		go logDelayedReport(MsgBgErrorMonitorStart)
+	}
 
 	channelExists = true
 	for channelExists {
@@ -275,7 +280,9 @@ func (srv *Server) Stop() error {
 	var timeoutShutdown time.Duration
 
 	// Report.
-	log.Println(MsgStop)
+	if (config.App.Main.Verbose) {
+		log.Println(MsgStop)
+	}
 
 	timeoutShutdown = time.Second * srv.ShutdownTimeout
 	ctx = context.Background()

@@ -15,7 +15,7 @@
 //
 // Web Site:		'https://github.com/legacy-vault'.
 // Author:			McArcher.
-// Creation Date:	2018-10-24.
+// Creation Date:	2018-10-27.
 // Web Site Address is an Address in the global Computer Internet Network.
 //
 //============================================================================//
@@ -40,6 +40,13 @@ func initialize(app *Application) error {
 
 	var err error
 
+	// Initialize the Command Line Arguments.
+	err = initCLA(app)
+	if err != nil {
+		log.Println(ErrCLAInit, err)
+		return err
+	}
+
 	// Quit Infrastructure Preparations.
 	err = initQuitInfrastructure(app)
 	if err != nil {
@@ -62,7 +69,11 @@ func initialize(app *Application) error {
 	}
 
 	// Prepare the HTTP Server.
-	err = initHTTPServer(app.HTTPServer, app.QuitChannel)
+	err = initHTTPServer(
+		config.App,
+		app.HTTPServer,
+		app.QuitChannel,
+	)
 	if err != nil {
 		log.Println(ErrHTTPServerInit, err)
 		return err
@@ -89,7 +100,11 @@ func initQuitInfrastructure(app *Application) error {
 }
 
 // Initializes the HTTP Server.
-func initHTTPServer(srv *server.Server, appQuitChannel chan int) error {
+func initHTTPServer(
+	appCfg config.AppCfg,
+	srv *server.Server,
+	appQuitChannel chan int,
+) error {
 
 	var timeoutSetting server.TimoutSetting
 	var tmpSrv *server.Server
@@ -103,8 +118,8 @@ func initHTTPServer(srv *server.Server, appQuitChannel chan int) error {
 	)
 
 	tmpSrv = server.New(
-		config.HTTPServerHost,
-		config.HTTPServerPort,
+		appCfg.HTTP.Host,
+		appCfg.HTTP.Port,
 		timeoutSetting,
 		config.HTTPServerStartupErrorMonitoringPeriod,
 		appQuitChannel,

@@ -15,7 +15,7 @@
 //
 // Web Site:		'https://github.com/legacy-vault'.
 // Author:			McArcher.
-// Creation Date:	2018-10-24.
+// Creation Date:	2018-10-27.
 // Web Site Address is an Address in the global Computer Internet Network.
 //
 //============================================================================//
@@ -31,11 +31,30 @@ const AppVersion = "1.0.0"
 const AppName = "The Application Framework by McArcher"
 
 // HTTP Server Settings.
-const HTTPServerHost = "0.0.0.0"
-const HTTPServerPort = "2000"
 const HTTPServerTimeoutIdle = 300                // Seconds.
 const HTTPServerTimeoutRead = 300                // Seconds.
 const HTTPServerTimeoutReadHeader = 300          // Seconds.
 const HTTPServerTimeoutWrite = 300               // Seconds.
 const HTTPServerStartupErrorMonitoringPeriod = 5 // Seconds.
 const HTTPServerTimeoutShutdown = 60             // Seconds.
+
+// Default Settings.
+const DefaultHTTPServerHost = "0.0.0.0"
+const DefaultHTTPServerPort = "2000"
+
+type AppCfg struct {
+	Main MainCfg
+	HTTP HTTPCfg
+}
+
+type MainCfg struct {
+	Verbose bool
+}
+
+type HTTPCfg struct {
+	Host                string
+	Port                string
+	SystemStatIsEnabled bool
+}
+
+var App AppCfg

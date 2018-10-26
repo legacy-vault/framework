@@ -15,7 +15,7 @@
 //
 // Web Site:		'https://github.com/legacy-vault'.
 // Author:			McArcher.
-// Creation Date:	2018-10-24.
+// Creation Date:	2018-10-27.
 // Web Site Address is an Address in the global Computer Internet Network.
 //
 //============================================================================//
@@ -28,15 +28,18 @@ package server
 
 import (
 	"github.com/legacy-vault/framework/go/http_server/config"
+	"github.com/legacy-vault/framework/go/http_server/helper"
 	"log"
 	"net/http"
-	"net/url"
 )
 
-const PathAppName = "/appname"
-const PathPing = "/ping"
-const PathStatistics = "/statistics"
-const PathVersion = "/version"
+const PathSystem = "system"
+const PathSystemAppName = "appname"
+const PathSystemPing = "ping"
+const PathSystemRAMUsage = "ram"
+const PathSystemStatistics = "statistics"
+const PathSystemUptime = "uptime"
+const PathSystemVersion = "version"
 
 var (
 	reply404BA     = []byte("Resource is not found.")
@@ -48,19 +51,13 @@ var (
 // Main HTTP Handler (Router).
 func httpRouter(w http.ResponseWriter, r *http.Request) {
 
-	var err error
+	var pathComponent1 string
+	var pathComponent2 string
+	var pathComponents []string
 	var reqURLPath string
-	var reqURLFirstLetter byte
-	var reqURLParams url.Values
 
 	// Request's URL & Parameters.
 	reqURLPath = r.URL.Path
-	reqURLParams, err = url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		// Log.
-		log.Println(err)
-		return
-	}
 
 	// No Path is specified? => Root (Index) Page.
 	if len(reqURLPath) <= 1 {
@@ -68,56 +65,64 @@ func httpRouter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the first Letter.
-	reqURLFirstLetter = reqURLPath[1]
+	// Split Path into Components.
+	pathComponents = helper.SplitPathIntoComponents(reqURLPath)
 
-	// URL Parameters Processing.
-	reqURLParams = reqURLParams //! <- This is a Plug.
-
-	// Route a Request to a Method according to the URL requested.
-	// Routing is done in Two Steps:
-	// 1. We sort URLs by the first Letter, to speed up the Search;
-	// 2. We search a Method according to the first Letter selected.
-	switch reqURLFirstLetter {
-
-	case 'a':
-		if reqURLPath == PathAppName {
-			handlerAppName(w, r)
-			return
-		} else {
-			handlerResourceNotFound(w, r)
-			return
-		}
-
-	case 'p':
-		if reqURLPath == PathPing {
-			handlerPing(w, r)
-			return
-		} else {
-			handlerResourceNotFound(w, r)
-			return
-		}
-
-	case 's':
-		if reqURLPath == PathStatistics {
-			handlerStatistics(w, r)
-			return
-		} else {
-			handlerResourceNotFound(w, r)
-			return
-		}
-
-	case 'v':
-		if reqURLPath == PathVersion {
-			handlerVersion(w, r)
-			return
-		} else {
-			handlerResourceNotFound(w, r)
-			return
-		}
-
-	default:
-		handlerResourceNotFound(w, r)
+	if len(pathComponents) >= 1 {
+		pathComponent1 = pathComponents[0]
+	} else {
+		handlerRoot(w, r)
 		return
 	}
+
+	if (config.App.HTTP.SystemStatIsEnabled) && (pathComponent1 == PathSystem) {
+
+		// System Handlers.
+
+		// Bad Request?
+		if len(pathComponents) < 2 {
+			handlerResourceNotFound(w, r)
+			return
+		}
+
+		pathComponent2 = pathComponents[1]
+		switch pathComponent2 {
+
+		case PathSystemPing:
+			handlerPing(w, r)
+			return
+
+		case PathSystemUptime:
+			handlerUptime(w, r)
+			return
+
+		case PathSystemRAMUsage:
+			handlerRAMUsage(w, r)
+			return
+
+		case PathSystemAppName:
+			handlerAppName(w, r)
+			return
+
+		case PathSystemVersion:
+			handlerVersion(w, r)
+			return
+
+		case PathSystemStatistics:
+			handlerStatistics(w, r)
+			return
+
+		default:
+			handlerResourceNotFound(w, r)
+			return
+		}
+	}
+
+	// Normal Path.
+	if (config.App.Main.Verbose) {
+		log.Println(pathComponent1)
+	}
+
+	handlerResourceNotFound(w, r)
+	return
 }

@@ -20,24 +20,31 @@
 //
 //============================================================================//
 
-// app.go.
+// helper.go.
 
-// Application.
+// Various helping Functions.
 
-package main
+package helper
 
-import (
-	"github.com/legacy-vault/framework/go/http_server/server"
-	"os"
-)
+import "strings"
 
-type Application struct {
-	// HTTP Server.
-	HTTPServer *server.Server
+const Slash = "/"
 
-	// Channel accepting Application Quit Signals.
-	QuitChannel chan int
+// Turns a Path into Array of Path Components (Folders or Files).
+func SplitPathIntoComponents(path string) []string {
 
-	// Channel accepting O.S. Signals for Service Termination.
-	OSTermSignalsChannel chan os.Signal
+	var components []string
+
+	// Trim Slash at Corners.
+	if strings.HasPrefix(path, Slash) {
+		path = strings.TrimPrefix(path, Slash)
+	}
+	if strings.HasSuffix(path, Slash) {
+		path = strings.TrimSuffix(path, Slash)
+	}
+
+	// Split by Slash.
+	components = strings.Split(path, Slash)
+
+	return components
 }

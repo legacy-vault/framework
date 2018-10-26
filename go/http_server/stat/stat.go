@@ -15,7 +15,7 @@
 //
 // Web Site:		'https://github.com/legacy-vault'.
 // Author:			McArcher.
-// Creation Date:	2018-10-24.
+// Creation Date:	2018-10-27.
 // Web Site Address is an Address in the global Computer Internet Network.
 //
 //============================================================================//
@@ -27,6 +27,7 @@
 package stat
 
 import (
+	"runtime"
 	"time"
 )
 
@@ -66,4 +67,16 @@ func GetTimeBeingAlive() int64 {
 	upTime = tsNow - StartTimestamp
 
 	return upTime
+}
+
+// Returns Application's Memory Usage Statistics.
+func GetMemoryUsage() uint64 {
+
+	var m runtime.MemStats
+	var ramUsedfromOS uint64
+
+	runtime.ReadMemStats(&m)
+	ramUsedfromOS = m.Sys
+
+	return ramUsedfromOS
 }

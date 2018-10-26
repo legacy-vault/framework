@@ -15,7 +15,7 @@
 //
 // Web Site:		'https://github.com/legacy-vault'.
 // Author:			McArcher.
-// Creation Date:	2018-10-24.
+// Creation Date:	2018-10-27.
 // Web Site Address is an Address in the global Computer Internet Network.
 //
 //============================================================================//
@@ -35,11 +35,31 @@ import (
 	"time"
 )
 
-// HTTP Handler of a Root Page.
-func handlerRoot(w http.ResponseWriter, r *http.Request) {
+// HTTP Handler of URL='/system/appname'.
+func handlerAppName(w http.ResponseWriter, r *http.Request) {
 
-	// Redirect to the '404' Page as we are not showing anything here.
-	handlerResourceNotFound(w, r)
+	w.Write(replyAppNameBA)
+	return
+}
+
+// HTTP Handler of URL='/system/ping'.
+func handlerPing(w http.ResponseWriter, r *http.Request) {
+
+	w.Write(replyPongBA)
+	return
+}
+
+// HTTP Handler of URL='/system/ram'.
+func handlerRAMUsage(w http.ResponseWriter, r *http.Request) {
+
+	var ramUsage uint64
+	var ramUsageStr string
+
+	// Prepare Data.
+	ramUsage = stat.GetMemoryUsage()
+	ramUsageStr = strconv.FormatUint(ramUsage, 10)
+
+	w.Write([]byte(ramUsageStr))
 	return
 }
 
@@ -51,17 +71,20 @@ func handlerResourceNotFound(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// HTTP Handler of URL='/ping'.
-func handlerPing(w http.ResponseWriter, r *http.Request) {
+// HTTP Handler of a Root Page.
+func handlerRoot(w http.ResponseWriter, r *http.Request) {
 
-	w.Write(replyPongBA)
+	// Redirect to the '404' Page as we are not showing anything here.
+	handlerResourceNotFound(w, r)
 	return
 }
 
-// HTTP Handler of URL='/statistics'.
+// HTTP Handler of URL='/system/statistics'.
 func handlerStatistics(w http.ResponseWriter, r *http.Request) {
 
 	var buffer bytes.Buffer
+	var ramUsageKiB uint64
+	var ramUsageKiBStr string
 	var replyBA []byte
 	var reportTimeStr string
 	var timeOfStart string
@@ -75,6 +98,8 @@ func handlerStatistics(w http.ResponseWriter, r *http.Request) {
 	upTimeStr = strconv.FormatInt(upTime, 10)
 	reportTimeStr = time.Now().Format(stat.TimeFormat)
 	version = config.AppVersion
+	ramUsageKiB = stat.GetMemoryUsage() / 1024
+	ramUsageKiBStr = strconv.FormatUint(ramUsageKiB, 10)
 
 	// Compose a Report.
 	buffer.WriteString("STATISTICS\r\n\r\n")
@@ -82,6 +107,8 @@ func handlerStatistics(w http.ResponseWriter, r *http.Request) {
 	buffer.WriteString("Service Version: " + version + ".\r\n")
 	buffer.WriteString("Time of Start: " + timeOfStart + ".\r\n")
 	buffer.WriteString("Running Time (Seconds): " + upTimeStr + ".\r\n")
+	buffer.WriteString("Operating System RAM Usage (KiB): " +
+		ramUsageKiBStr + ".\r\n")
 	buffer.WriteString("\r\n")
 	buffer.WriteString("Report Time: " + reportTimeStr + ".\r\n")
 
@@ -92,16 +119,23 @@ func handlerStatistics(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// HTTP Handler of URL='/version'.
-func handlerVersion(w http.ResponseWriter, r *http.Request) {
+// HTTP Handler of URL='/system/uptime'.
+func handlerUptime(w http.ResponseWriter, r *http.Request) {
 
-	w.Write(replyVersionBA)
+	var upTime int64
+	var upTimeStr string
+
+	// Prepare Data.
+	upTime = stat.GetTimeBeingAlive()
+	upTimeStr = strconv.FormatInt(upTime, 10)
+
+	w.Write([]byte(upTimeStr))
 	return
 }
 
-// HTTP Handler of URL='/appname'.
-func handlerAppName(w http.ResponseWriter, r *http.Request) {
+// HTTP Handler of URL='/system/version'.
+func handlerVersion(w http.ResponseWriter, r *http.Request) {
 
-	w.Write(replyAppNameBA)
+	w.Write(replyVersionBA)
 	return
 }

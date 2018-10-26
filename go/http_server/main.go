@@ -15,7 +15,7 @@
 //
 // Web Site:		'https://github.com/legacy-vault'.
 // Author:			McArcher.
-// Creation Date:	2018-10-24.
+// Creation Date:	2018-10-27.
 // Web Site Address is an Address in the global Computer Internet Network.
 //
 //============================================================================//
@@ -39,6 +39,7 @@ const ErrHTTPServerStart = "HTTP Server Start Error:"
 const ErrOSSHInit = "O.S. Signals Handler Initialization Error:"
 const ErrQuitInfrastructureInit = "Application Quit Infrastructure Error:"
 const ErrStatInit = "Internal Statistics Initialization Error:"
+const ErrCLAInit = "Command Line Arguments Initialization Error:"
 
 // Program's Entry Point.
 func main() {
