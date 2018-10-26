@@ -32,7 +32,7 @@ The Framework provides an extended Functionality comparing with the Golang's bui
 
 Import Commands:
 ```
-go get "github.com/legacy-vault/framework/go/http_server"
+go get -u "github.com/legacy-vault/framework/go/http_server"
 ```
 
 ## Usage.
