@@ -27,6 +27,7 @@
 package main
 
 import (
+	"github.com/legacy-vault/framework/go/http_server/model"
 	"github.com/legacy-vault/framework/go/http_server/server"
 	"os"
 )
@@ -40,4 +41,7 @@ type Application struct {
 
 	// Channel accepting O.S. Signals for Service Termination.
 	OSTermSignalsChannel chan os.Signal
+
+	// BTIH Data.
+	BTIH model.BTIHData
 }

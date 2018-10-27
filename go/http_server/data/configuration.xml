@@ -1,0 +1,13 @@
+<!-- This is a sample Configuration File. -->
+
+<Configuration>
+	<Label>Common Configuration File</Label>
+	<BTIHCache>
+		<URLPath>btih</URLPath>
+		<RootPath>/tmp/btih</RootPath>
+		<Capacity>8192</Capacity>
+		<TTL>900</TTL>
+		<QueueSize>4096</QueueSize>
+		<FileExt>.torrent</FileExt>
+	</BTIHCache>
+</Configuration>

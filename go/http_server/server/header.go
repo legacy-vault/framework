@@ -20,61 +20,16 @@
 //
 //============================================================================//
 
-// stat.go.
+// header.go.
 
-// Application's Statistics.
+// HTTP Headers.
 
-package stat
+package server
 
-import (
-	"runtime"
-	"time"
-)
+// Header Names.
+const HeaderContentDisposition = "Content-Disposition"
+const HeaderContentType = "Content-Type"
+const HeaderServer = "Server"
 
-var StartTime time.Time
-var StartTimestamp int64
-
-var StopTime time.Time
-var StopTimestamp int64
-
-// Initializes Statistics.
-func Init() error {
-
-	StartTime = time.Now()
-	StartTimestamp = StartTime.Unix()
-
-	return nil
-}
-
-// Finalizes Statistics.
-func Fin() error {
-
-	StopTime = time.Now()
-	StopTimestamp = StopTime.Unix()
-
-	return nil
-}
-
-// Returns the Duration (in Seconds) of the Service being alive ("up-time").
-func GetTimeBeingAlive() int64 {
-
-	var tsNow int64
-	var upTime int64
-
-	tsNow = time.Now().Unix()
-	upTime = tsNow - StartTimestamp
-
-	return upTime
-}
-
-// Returns Application's Memory Usage Statistics.
-func GetMemoryUsage() uint64 {
-
-	var m runtime.MemStats
-	var ramUsedfromOS uint64
-
-	runtime.ReadMemStats(&m)
-	ramUsedfromOS = m.Sys
-
-	return ramUsedfromOS
-}
+// Various Template Formats.
+const HeaderContentDispositionAttachment = `attachment; filename="%s"`

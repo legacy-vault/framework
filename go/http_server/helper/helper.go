@@ -28,7 +28,15 @@ package helper
 
 import "strings"
 
+const DoubleQuote = `"`
+const HeaderDoubleQuoteEscaped = `\"`
 const Slash = "/"
+
+// Prepares the String for a HTTP Headers.
+func PrepareStringForHTTPHeader(s string) string {
+
+	return strings.Replace(s, DoubleQuote, HeaderDoubleQuoteEscaped, -1)
+}
 
 // Turns a Path into Array of Path Components (Folders or Files).
 func SplitPathIntoComponents(path string) []string {

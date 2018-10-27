@@ -36,21 +36,25 @@ import (
 )
 
 // HTTP Handler of URL='/system/appname'.
-func handlerAppName(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handlerAppName(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set(HeaderServer, config.HTTPServerName)
+	w.WriteHeader(http.StatusOK)
 	w.Write(replyAppNameBA)
 	return
 }
 
 // HTTP Handler of URL='/system/ping'.
-func handlerPing(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handlerPing(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set(HeaderServer, config.HTTPServerName)
+	w.WriteHeader(http.StatusOK)
 	w.Write(replyPongBA)
 	return
 }
 
 // HTTP Handler of URL='/system/ram'.
-func handlerRAMUsage(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handlerRAMUsage(w http.ResponseWriter, r *http.Request) {
 
 	var ramUsage uint64
 	var ramUsageStr string
@@ -59,28 +63,34 @@ func handlerRAMUsage(w http.ResponseWriter, r *http.Request) {
 	ramUsage = stat.GetMemoryUsage()
 	ramUsageStr = strconv.FormatUint(ramUsage, 10)
 
+	w.Header().Set(HeaderServer, config.HTTPServerName)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(ramUsageStr))
 	return
 }
 
 // HTTP Handler of a non-existent URL.
-func handlerResourceNotFound(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handlerResourceNotFound(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 
+	w.Header().Set(HeaderServer, config.HTTPServerName)
 	w.WriteHeader(http.StatusNotFound)
 	w.Write(reply404BA)
 	return
 }
 
 // HTTP Handler of a Root Page.
-func handlerRoot(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handlerRoot(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to the '404' Page as we are not showing anything here.
-	handlerResourceNotFound(w, r)
+	srv.handlerResourceNotFound(w, r)
 	return
 }
 
 // HTTP Handler of URL='/system/statistics'.
-func handlerStatistics(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handlerStatistics(w http.ResponseWriter, r *http.Request) {
 
 	var buffer bytes.Buffer
 	var ramUsageKiB uint64
@@ -94,9 +104,9 @@ func handlerStatistics(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare Data.
 	upTime = stat.GetTimeBeingAlive()
-	timeOfStart = stat.StartTime.Format(stat.TimeFormat)
+	timeOfStart = stat.StartTime.Format(config.TimeFormat)
 	upTimeStr = strconv.FormatInt(upTime, 10)
-	reportTimeStr = time.Now().Format(stat.TimeFormat)
+	reportTimeStr = time.Now().Format(config.TimeFormat)
 	version = config.AppVersion
 	ramUsageKiB = stat.GetMemoryUsage() / 1024
 	ramUsageKiBStr = strconv.FormatUint(ramUsageKiB, 10)
@@ -115,12 +125,14 @@ func handlerStatistics(w http.ResponseWriter, r *http.Request) {
 	replyBA = buffer.Bytes()
 
 	// Send the Reply.
+	w.Header().Set(HeaderServer, config.HTTPServerName)
+	w.WriteHeader(http.StatusOK)
 	w.Write(replyBA)
 	return
 }
 
 // HTTP Handler of URL='/system/uptime'.
-func handlerUptime(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handlerUptime(w http.ResponseWriter, r *http.Request) {
 
 	var upTime int64
 	var upTimeStr string
@@ -129,13 +141,17 @@ func handlerUptime(w http.ResponseWriter, r *http.Request) {
 	upTime = stat.GetTimeBeingAlive()
 	upTimeStr = strconv.FormatInt(upTime, 10)
 
+	w.Header().Set(HeaderServer, config.HTTPServerName)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(upTimeStr))
 	return
 }
 
 // HTTP Handler of URL='/system/version'.
-func handlerVersion(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handlerVersion(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set(HeaderServer, config.HTTPServerName)
+	w.WriteHeader(http.StatusOK)
 	w.Write(replyVersionBA)
 	return
 }

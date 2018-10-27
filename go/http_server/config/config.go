@@ -31,6 +31,7 @@ const AppVersion = "1.0.0"
 const AppName = "The Application Framework by McArcher"
 
 // HTTP Server Settings.
+const HTTPServerName = AppName + " " + AppVersion
 const HTTPServerTimeoutIdle = 300                // Seconds.
 const HTTPServerTimeoutRead = 300                // Seconds.
 const HTTPServerTimeoutReadHeader = 300          // Seconds.
@@ -39,22 +40,38 @@ const HTTPServerStartupErrorMonitoringPeriod = 5 // Seconds.
 const HTTPServerTimeoutShutdown = 60             // Seconds.
 
 // Default Settings.
+const DefaultConfigurationFile = ""
 const DefaultHTTPServerHost = "0.0.0.0"
 const DefaultHTTPServerPort = "2000"
 
+// Formats.
+const TimeFormat = "2006-01-02 15:04:05 MST"
+
 type AppCfg struct {
-	Main MainCfg
-	HTTP HTTPCfg
+	Main      MainCfg
+	HTTP      HTTPCfg
+	BTIHCache BTIHCacheCfg
 }
 
 type MainCfg struct {
-	Verbose bool
+	ConfigurationFile string
+	Verbose           bool
 }
 
 type HTTPCfg struct {
 	Host                string
 	Port                string
 	SystemStatIsEnabled bool
+}
+
+type BTIHCacheCfg struct {
+	IsEnabled bool
+	RootPath  string
+	URLPath   string
+	Capacity  uint64
+	TTL       int64
+	QueueSize uint64
+	FileExt   string
 }
 
 var App AppCfg

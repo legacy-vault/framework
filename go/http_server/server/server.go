@@ -30,6 +30,7 @@ import (
 	"fmt"
 	"github.com/legacy-vault/framework/go/http_server/config"
 	"github.com/legacy-vault/framework/go/http_server/exit"
+	"github.com/legacy-vault/framework/go/http_server/model"
 	"golang.org/x/net/context"
 	"log"
 	"net"
@@ -54,7 +55,8 @@ const MsgBgErrorMonitorStart = "HTTP Server Background Error Monitor " +
 const MsgBgErrorMonitorStop = "HTTP Server Background Error Monitor " +
 	"has stopped."
 
-const MsgFormatStartAddress = "HTTP Server has been started at '%s'."
+const MsgFormatStartAddress = "HTTP Server has been started " +
+	"at '%s' on '%s'."
 
 type Server struct {
 	HTTPServer                   http.Server
@@ -62,6 +64,12 @@ type Server struct {
 	ErrorChan                    chan error
 	AppQuitChannel               chan int
 	ShutdownTimeout              time.Duration
+	BTIH                         BTIHSettings
+}
+
+type BTIHSettings struct {
+	TasksChannel       chan model.BTIHTask
+	NewTasksAreAllowed *bool
 }
 
 type TimoutSetting struct {
@@ -79,6 +87,7 @@ func New(
 	timeoutSetting TimoutSetting,
 	startUpErrorMonitoringPeriod int,
 	appQuitChannel chan int,
+	btihSettings BTIHSettings,
 ) *Server {
 
 	var server *Server
@@ -90,6 +99,7 @@ func New(
 		timeoutSetting,
 		startUpErrorMonitoringPeriod,
 		appQuitChannel,
+		btihSettings,
 	)
 
 	return server
@@ -102,6 +112,7 @@ func (srv *Server) initialize(
 	timeoutSetting TimoutSetting,
 	startUpErrorMonitoringPeriod int,
 	appQuitChannel chan int,
+	btihSettings BTIHSettings,
 ) {
 
 	// Set Address.
@@ -114,7 +125,7 @@ func (srv *Server) initialize(
 	srv.HTTPServer.WriteTimeout = timeoutSetting.Write
 
 	// Set Router.
-	srv.HTTPServer.Handler = http.HandlerFunc(httpRouter)
+	srv.HTTPServer.Handler = http.HandlerFunc(srv.httpRouter)
 
 	// Set Period for Monitoring of StartUp Errors.
 	srv.StartUpErrorMonitoringPeriod = time.Second *
@@ -128,6 +139,10 @@ func (srv *Server) initialize(
 
 	// Shutdown Timeout.
 	srv.ShutdownTimeout = timeoutSetting.Shutdown
+
+	// BTIH Unit Tasks Channel.
+	srv.BTIH.TasksChannel = btihSettings.TasksChannel
+	srv.BTIH.NewTasksAreAllowed = btihSettings.NewTasksAreAllowed
 
 	return
 }
@@ -161,6 +176,8 @@ func (srv *Server) Start() error {
 	var loop bool
 	var msg string
 	var sleepTick time.Duration
+	var startTime time.Time
+	var startTimeStr string
 	var timeOfStart time.Time
 	var timeOfStartUpMonitorEnd time.Time
 
@@ -210,8 +227,14 @@ func (srv *Server) Start() error {
 	fmt.Println(StartUpErrorMonitorMsgPostfixGood)
 
 	// Log a delayed Address Report.
+	startTime = time.Now()
+	startTimeStr = startTime.Format(config.TimeFormat)
 	if (config.App.Main.Verbose) {
-		msg = fmt.Sprintf(MsgFormatStartAddress, srv.HTTPServer.Addr)
+		msg = fmt.Sprintf(
+			MsgFormatStartAddress,
+			srv.HTTPServer.Addr,
+			startTimeStr,
+		)
 		go logDelayedReport(msg)
 	}
 

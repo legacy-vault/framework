@@ -20,61 +20,30 @@
 //
 //============================================================================//
 
-// stat.go.
+// btih.go.
 
-// Application's Statistics.
+// BTIH Models.
 
-package stat
+package model
 
 import (
-	"runtime"
-	"time"
+	"sync"
 )
 
-var StartTime time.Time
-var StartTimestamp int64
-
-var StopTime time.Time
-var StopTimestamp int64
-
-// Initializes Statistics.
-func Init() error {
-
-	StartTime = time.Now()
-	StartTimestamp = StartTime.Unix()
-
-	return nil
+type BTIHTask struct {
+	BTIH          string
+	FileExists    bool
+	FileContents  []byte
+	ReturnAddress chan BTIHTask
 }
 
-// Finalizes Statistics.
-func Fin() error {
+type BTIHData struct {
+	// Channel for BTIH Unit Tasks.
+	Tasks chan BTIHTask
 
-	StopTime = time.Now()
-	StopTimestamp = StopTime.Unix()
+	// BTIH busy Manager.
+	BusyManagers *sync.WaitGroup
 
-	return nil
-}
-
-// Returns the Duration (in Seconds) of the Service being alive ("up-time").
-func GetTimeBeingAlive() int64 {
-
-	var tsNow int64
-	var upTime int64
-
-	tsNow = time.Now().Unix()
-	upTime = tsNow - StartTimestamp
-
-	return upTime
-}
-
-// Returns Application's Memory Usage Statistics.
-func GetMemoryUsage() uint64 {
-
-	var m runtime.MemStats
-	var ramUsedfromOS uint64
-
-	runtime.ReadMemStats(&m)
-	ramUsedfromOS = m.Sys
-
-	return ramUsedfromOS
+	// Are new Tasks allowed?
+	NewTasksAreAllowed *bool
 }

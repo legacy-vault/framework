@@ -27,7 +27,9 @@
 package main
 
 import (
+	"github.com/legacy-vault/framework/go/http_server/btih"
 	"github.com/legacy-vault/framework/go/http_server/config"
+	"github.com/legacy-vault/framework/go/http_server/model"
 	"github.com/legacy-vault/framework/go/http_server/server"
 	"github.com/legacy-vault/framework/go/http_server/stat"
 	"log"
@@ -36,10 +38,11 @@ import (
 )
 
 const MsgShutdown = "Application Shutdown has started."
-const MsgFormatStopReport = "Application has been stopped at %v.\r\n"
+const MsgFormatStopReport = "Application has been stopped on '%s'.\r\n"
 
 const ErrHTTPFin = "HTTP Server Stop Error:"
 const ErrStatFin = "Internal Statistics Stop Error:"
+const ErrBTIHFin = "BTIH Cache Stop Error:"
 
 // Finalizes the Application.
 func Fin(app *Application, exitCode int) error {
@@ -59,6 +62,18 @@ func Fin(app *Application, exitCode int) error {
 		return err
 	}
 
+	// Stop Optional Functionality Units...
+
+	// 1. Stop the BTIH Cache.
+	if config.App.BTIHCache.IsEnabled {
+
+		err = stopBTIH(app.BTIH)
+		if err != nil {
+			log.Println(ErrBTIHFin, err)
+			return err
+		}
+	}
+
 	// Stop the internal Statistics.
 	err = stat.Fin()
 	if err != nil {
@@ -69,7 +84,7 @@ func Fin(app *Application, exitCode int) error {
 	// Report.
 	if (config.App.Main.Verbose) {
 		stopTime = stat.StopTime
-		stopTimeStr = stopTime.Format(stat.TimeFormat)
+		stopTimeStr = stopTime.Format(config.TimeFormat)
 		log.Printf(MsgFormatStopReport, stopTimeStr)
 	}
 
@@ -86,6 +101,34 @@ func stopHTTPServer(srv *server.Server) error {
 	err = srv.Stop()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Stops the BTIH Unit.
+func stopBTIH(btihData model.BTIHData) error {
+
+	var err error
+
+	// Forbid Creation of new Tasks.
+	*btihData.NewTasksAreAllowed = false
+
+	// Close Tasks Channel.
+	close(btihData.Tasks)
+
+	// Wait for the Manager to finish his Work.
+	btihData.BusyManagers.Wait()
+
+	// Finalize internal BTIH Structures.
+	err = btih.Fin()
+	if err != nil {
+		return err
+	}
+
+	// Report.
+	if config.App.Main.Verbose == true {
+		log.Printf(MsgFormatUnitStopped, FuncUnitBTIHCache)
 	}
 
 	return nil

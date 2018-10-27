@@ -27,13 +27,21 @@
 package main
 
 import (
+	"errors"
+	"fmt"
+	"github.com/legacy-vault/framework/go/http_server/btih"
 	"github.com/legacy-vault/framework/go/http_server/config"
 	"github.com/legacy-vault/framework/go/http_server/exit"
+	"github.com/legacy-vault/framework/go/http_server/model"
 	"github.com/legacy-vault/framework/go/http_server/server"
 	"github.com/legacy-vault/framework/go/http_server/stat"
 	"log"
 	"os"
+	"sync"
 )
+
+const ErrFormatInitializationNotRequired = "Initialization of '%s' was not" +
+	" required but for some Reason it was started"
 
 // Initializes the Application.
 func initialize(app *Application) error {
@@ -54,6 +62,13 @@ func initialize(app *Application) error {
 		return err
 	}
 
+	// Initialize the Configuration File.
+	err = initConfigFile()
+	if err != nil {
+		log.Println(ErrConfigFileInit, err)
+		return err
+	}
+
 	// O.S. Signals Handler.
 	err = initOSS(app)
 	if err != nil {
@@ -68,11 +83,22 @@ func initialize(app *Application) error {
 		return err
 	}
 
+	// Optional Functionality Units...
+
+	// 1. BTIH.
+	if (config.App.BTIHCache.IsEnabled) {
+		err = initBTIH(app)
+		if err != nil {
+			log.Println(ErrBTIHInit, err)
+			return err
+		}
+	}
+
 	// Prepare the HTTP Server.
 	err = initHTTPServer(
 		config.App,
 		app.HTTPServer,
-		app.QuitChannel,
+		app,
 	)
 	if err != nil {
 		log.Println(ErrHTTPServerInit, err)
@@ -99,13 +125,63 @@ func initQuitInfrastructure(app *Application) error {
 	return nil
 }
 
+// Initializes the external Configuration File.
+func initConfigFile() error {
+
+	var cfg *config.XMLModelConfig
+	var cfgFilePath string
+	var err error
+
+	// Check Configuration File Path.
+	cfgFilePath = config.App.Main.ConfigurationFile
+	if len(cfgFilePath) == 0 {
+		// Configuration File is not available.
+
+		// Switch off all optional Features (that are dependent on it).
+		config.App.BTIHCache.IsEnabled = false
+
+		// Quit normally.
+		return nil
+	}
+
+	// Parse an external Configuration File.
+	cfg, err = config.ParseExtConfigurationFile(cfgFilePath)
+	if err != nil {
+		return err
+	}
+
+	// Check BTIH Cache Root Path for Collisions.
+	if cfg.BTIHCache.URLPath == server.PathSystem {
+		err = errors.New(ErrBTIHCacheURLPathCollision)
+		return err
+	}
+
+	// Save Configuration Data.
+	config.App.BTIHCache.RootPath = cfg.BTIHCache.RootPath
+	config.App.BTIHCache.URLPath = cfg.BTIHCache.URLPath
+	config.App.BTIHCache.Capacity = cfg.BTIHCache.Capacity
+	config.App.BTIHCache.TTL = cfg.BTIHCache.TTL
+	config.App.BTIHCache.QueueSize = cfg.BTIHCache.QueueSize
+	config.App.BTIHCache.FileExt = cfg.BTIHCache.FileExt
+	config.App.BTIHCache.IsEnabled = true
+	if config.App.Main.Verbose == true {
+		fmt.Printf(
+			MsgFormatFunctionalityEnabled,
+			FuncUnitBTIHCache,
+		)
+	}
+
+	return nil
+}
+
 // Initializes the HTTP Server.
 func initHTTPServer(
 	appCfg config.AppCfg,
 	srv *server.Server,
-	appQuitChannel chan int,
+	app *Application,
 ) error {
 
+	var btihSettings server.BTIHSettings
 	var timeoutSetting server.TimoutSetting
 	var tmpSrv *server.Server
 
@@ -117,12 +193,18 @@ func initHTTPServer(
 		config.HTTPServerTimeoutShutdown,
 	)
 
+	btihSettings = server.BTIHSettings{
+		TasksChannel:       app.BTIH.Tasks,
+		NewTasksAreAllowed: app.BTIH.NewTasksAreAllowed,
+	}
+
 	tmpSrv = server.New(
 		appCfg.HTTP.Host,
 		appCfg.HTTP.Port,
 		timeoutSetting,
 		config.HTTPServerStartupErrorMonitoringPeriod,
-		appQuitChannel,
+		app.QuitChannel,
+		btihSettings,
 	)
 	*srv = *tmpSrv
 
@@ -169,4 +251,44 @@ func appQuitMonitor(app *Application) {
 
 		break
 	}
+}
+
+// Starts the HTTP Server.
+func initBTIH(app *Application) error {
+
+	var err error
+
+	// Is BTIH Enabled?
+	if config.App.BTIHCache.IsEnabled == false {
+		err = fmt.Errorf(
+			ErrFormatInitializationNotRequired,
+			FuncUnitBTIHCache,
+		)
+		return err
+	}
+
+	// 1.1. BTIH Cache Tasks Queue.
+	app.BTIH.Tasks = make(
+		chan model.BTIHTask,
+		config.App.BTIHCache.QueueSize,
+	)
+	app.BTIH.NewTasksAreAllowed = new(bool)
+	*app.BTIH.NewTasksAreAllowed = true
+
+	// 1.2. Busy BTIH Manager.
+	app.BTIH.BusyManagers = new(sync.WaitGroup)
+	app.BTIH.BusyManagers.Add(1)
+
+	// 1.3. BTIH Cache internals.
+	err = btih.Init(
+		config.App.BTIHCache.RootPath,
+		config.App.BTIHCache.Capacity,
+		config.App.BTIHCache.TTL,
+		app.BTIH,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

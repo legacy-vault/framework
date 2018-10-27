@@ -32,18 +32,21 @@ import (
 )
 
 // Names of Command Line Arguments (Keys).
+const CLANameConfigurationFile = "config-file"
 const CLANameHTTPHost = "host"
 const CLANameHTTPPort = "port"
 const CLANameSystemStatistics = "ss"
 const CLANameVerbose = "v"
 
 // Default values of Command Line Arguments.
+const CLADefaultValueConfigurationFile = config.DefaultConfigurationFile
 const CLADefaultValueHTTPHost = config.DefaultHTTPServerHost
 const CLADefaultValueHTTPPort = config.DefaultHTTPServerPort
 const CLADefaultValueSystemStatistics = true
 const CLADefaultValueVerbose = true
 
 // Hint Texts of Command Line Arguments.
+const CLAHintConfigurationFile = "External Configuration File"
 const CLAHintHTTPHost = "HTTP Server's Host Name or IP Address"
 const CLAHintHTTPPort = "HTTP Server's Port"
 const CLAHintSystemStatistics = "System Statistics"
@@ -52,12 +55,18 @@ const CLAHintVerbose = "Verbose Mode"
 // Initializes the Command Line Arguments.
 func initCLA(app *Application) error {
 
+	var claConfigFile *string
 	var claHTTPHost *string
 	var claHTTPPort *string
 	var claSystemStats *bool
 	var claVerbose *bool
 
 	// Prepare C.L.A. Parameters.
+	claConfigFile = flag.String(
+		CLANameConfigurationFile,
+		CLADefaultValueConfigurationFile,
+		CLAHintConfigurationFile,
+	)
 	claHTTPHost = flag.String(
 		CLANameHTTPHost,
 		CLADefaultValueHTTPHost,
@@ -81,6 +90,7 @@ func initCLA(app *Application) error {
 
 	// Read Flags.
 	flag.Parse()
+	config.App.Main.ConfigurationFile = *claConfigFile
 	config.App.HTTP.Host = *claHTTPHost
 	config.App.HTTP.Port = *claHTTPPort
 	config.App.HTTP.SystemStatIsEnabled = *claSystemStats

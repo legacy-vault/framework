@@ -20,61 +20,60 @@
 //
 //============================================================================//
 
-// stat.go.
+// btih.go.
 
-// Application's Statistics.
+// BTIH File Cache.
 
-package stat
+package btih
 
 import (
-	"runtime"
-	"time"
+	"errors"
+	"github.com/legacy-vault/framework/go/http_server/model"
+	"github.com/legacy-vault/library/go/btih_cache"
 )
 
-var StartTime time.Time
-var StartTimestamp int64
+const ErrStop = "BTIH Cache Stop Error"
 
-var StopTime time.Time
-var StopTimestamp int64
+var cache *btih_cache.BTIHCache
 
-// Initializes Statistics.
-func Init() error {
+// Functionality Unit Initialization.
+func Init(
+	rootPath string,
+	capacity uint64,
+	ttl int64,
+	btihData model.BTIHData,
+) error {
 
-	StartTime = time.Now()
-	StartTimestamp = StartTime.Unix()
+	var err error
+
+	// Initialize the Cache.
+	cache, err = btih_cache.New(
+		capacity,
+		ttl,
+		rootPath,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Start the Tasks Manager.
+	go Manager(btihData)
 
 	return nil
 }
 
-// Finalizes Statistics.
+// Functionality Unit Finalization.
 func Fin() error {
 
-	StopTime = time.Now()
-	StopTimestamp = StopTime.Unix()
+	var err error
+	var ok bool
+
+	// Stop the Cache.
+	ok = cache.Stop()
+	if !ok {
+		err = errors.New(ErrStop)
+		return err
+	}
 
 	return nil
-}
-
-// Returns the Duration (in Seconds) of the Service being alive ("up-time").
-func GetTimeBeingAlive() int64 {
-
-	var tsNow int64
-	var upTime int64
-
-	tsNow = time.Now().Unix()
-	upTime = tsNow - StartTimestamp
-
-	return upTime
-}
-
-// Returns Application's Memory Usage Statistics.
-func GetMemoryUsage() uint64 {
-
-	var m runtime.MemStats
-	var ramUsedfromOS uint64
-
-	runtime.ReadMemStats(&m)
-	ramUsedfromOS = m.Sys
-
-	return ramUsedfromOS
 }

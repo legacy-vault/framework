@@ -33,13 +33,27 @@ import (
 	"os"
 )
 
-const ErrInit = "Initialization Error:"
-const ErrHTTPServerInit = "HTTP Server Initialization Error:"
-const ErrHTTPServerStart = "HTTP Server Start Error:"
-const ErrOSSHInit = "O.S. Signals Handler Initialization Error:"
-const ErrQuitInfrastructureInit = "Application Quit Infrastructure Error:"
-const ErrStatInit = "Internal Statistics Initialization Error:"
-const ErrCLAInit = "Command Line Arguments Initialization Error:"
+// Error Messages.
+const (
+	ErrError                     = "Error:"
+	ErrInit                      = "Initialization Error:"
+	ErrStart                     = "Start Error:"
+	ErrHTTPServerInit            = "HTTP Server " + ErrInit
+	ErrHTTPServerStart           = "HTTP Server " + ErrStart
+	ErrOSSHInit                  = "O.S. Signals Handler " + ErrInit
+	ErrQuitInfrastructureInit    = "Application Quit Infrastructure " + ErrInit
+	ErrStatInit                  = "Internal Statistics " + ErrInit
+	ErrCLAInit                   = "Command Line Arguments " + ErrInit
+	ErrConfigFileInit            = "Configuration File " + ErrInit
+	ErrBTIHCacheURLPathCollision = "BTIH Cache URL Path Collision Error"
+	ErrBTIHInit                  = "BTIH Cache " + ErrInit
+)
+
+// Normal Messages and their Formats.
+const (
+	MsgFormatFunctionalityEnabled = "<%s> Functionality has been Enabled.\r\n"
+	MsgFormatUnitStopped          = "<%s> Unit has been Stopped.\r\n"
+)
 
 // Program's Entry Point.
 func main() {

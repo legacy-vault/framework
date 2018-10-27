@@ -29,7 +29,6 @@ package server
 import (
 	"github.com/legacy-vault/framework/go/http_server/config"
 	"github.com/legacy-vault/framework/go/http_server/helper"
-	"log"
 	"net/http"
 )
 
@@ -49,7 +48,7 @@ var (
 )
 
 // Main HTTP Handler (Router).
-func httpRouter(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) httpRouter(w http.ResponseWriter, r *http.Request) {
 
 	var pathComponent1 string
 	var pathComponent2 string
@@ -61,7 +60,7 @@ func httpRouter(w http.ResponseWriter, r *http.Request) {
 
 	// No Path is specified? => Root (Index) Page.
 	if len(reqURLPath) <= 1 {
-		handlerRoot(w, r)
+		srv.handlerRoot(w, r)
 		return
 	}
 
@@ -71,17 +70,18 @@ func httpRouter(w http.ResponseWriter, r *http.Request) {
 	if len(pathComponents) >= 1 {
 		pathComponent1 = pathComponents[0]
 	} else {
-		handlerRoot(w, r)
+		srv.handlerRoot(w, r)
 		return
 	}
 
+	// System Handlers.
 	if (config.App.HTTP.SystemStatIsEnabled) && (pathComponent1 == PathSystem) {
 
 		// System Handlers.
 
 		// Bad Request?
 		if len(pathComponents) < 2 {
-			handlerResourceNotFound(w, r)
+			srv.handlerResourceNotFound(w, r)
 			return
 		}
 
@@ -89,40 +89,53 @@ func httpRouter(w http.ResponseWriter, r *http.Request) {
 		switch pathComponent2 {
 
 		case PathSystemPing:
-			handlerPing(w, r)
+			srv.handlerPing(w, r)
 			return
 
 		case PathSystemUptime:
-			handlerUptime(w, r)
+			srv.handlerUptime(w, r)
 			return
 
 		case PathSystemRAMUsage:
-			handlerRAMUsage(w, r)
+			srv.handlerRAMUsage(w, r)
 			return
 
 		case PathSystemAppName:
-			handlerAppName(w, r)
+			srv.handlerAppName(w, r)
 			return
 
 		case PathSystemVersion:
-			handlerVersion(w, r)
+			srv.handlerVersion(w, r)
 			return
 
 		case PathSystemStatistics:
-			handlerStatistics(w, r)
+			srv.handlerStatistics(w, r)
 			return
 
 		default:
-			handlerResourceNotFound(w, r)
+			srv.handlerResourceNotFound(w, r)
 			return
 		}
 	}
 
-	// Normal Path.
-	if (config.App.Main.Verbose) {
-		log.Println(pathComponent1)
+	// BTIH Handlers.
+	if (config.App.BTIHCache.IsEnabled) &&
+		(pathComponent1 == config.App.BTIHCache.URLPath) {
+
+		// Bad Request?
+		if len(pathComponents) < 2 {
+			srv.handlerResourceNotFound(w, r)
+			return
+		}
+
+		pathComponent2 = pathComponents[1]
+
+		// Redirect the Request to BTIH Handler.
+		srv.handlerBTIH(w, r, pathComponent2)
+		return
 	}
 
-	handlerResourceNotFound(w, r)
+	// Normal Path.
+	srv.handlerResourceNotFound(w, r)
 	return
 }
