@@ -275,6 +275,11 @@ func (srv *Server) bgErrorMonitor() {
 		// Report an Error.
 		log.Printf(BackgroundErrorMonitorMsgFormat, err)
 
+		// Skip the Error if it is not critical.
+		if ErrorIsNotCritical(err) {
+			continue
+		}
+
 		// Request the Application ShutDown.
 		srv.AppQuitChannel <- exit.CodeHTTPServerFailure
 
@@ -283,6 +288,16 @@ func (srv *Server) bgErrorMonitor() {
 
 	// Stop Report.
 	log.Println(MsgBgErrorMonitorStop)
+}
+
+// Check whether an Error is not critical.
+func ErrorIsNotCritical(err error) bool {
+
+	if (err == http.ErrServerClosed) {
+		return true
+	}
+
+	return false
 }
 
 // Logs a delayed Report.
